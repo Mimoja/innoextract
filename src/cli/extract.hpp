@@ -71,6 +71,8 @@ struct extract_options {
 	bool gog_galaxy; //!< Try to re-assemble GOG Galaxy files
 	
 	bool extract_unknown; //!< Try to extract unknown Inno Setup versions
+
+	bool stdin; //!< Read Installer from stdin instead of filesystem
 	
 	bool extract_temp; //!< Extract temporary files
 	bool language_only; //!< Extract files not associated with any language
@@ -104,6 +106,7 @@ struct extract_options {
 		, gog(false)
 		, gog_galaxy(false)
 		, extract_unknown(false)
+		, stdin(false)
 		, extract_temp(false)
 		, language_only(false)
 		, collisions(OverwriteCollisions)
@@ -112,5 +115,6 @@ struct extract_options {
 };
 
 void process_file(const boost::filesystem::path & file, const extract_options & o);
+void process_stream(std::istream & ifs, boost::filesystem::path file, const extract_options & o);
 
 #endif // INNOEXTRACT_CLI_EXTRACT_HPP

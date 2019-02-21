@@ -120,7 +120,7 @@ static void print_license() {
 }
 
 int main(int argc, char * argv[]) {
-	
+
 	po::options_description generic("Generic options");
 	generic.add_options()
 		("help,h", "Show supported options")
@@ -156,6 +156,7 @@ int main(int argc, char * argv[]) {
 		("gog,g", "Extract additional archives from GOG.com installers")
 		("no-gog-galaxy", "Don't re-assemble GOG Galaxy file parts")
 		("no-extract-unknown,n", "Don't extract unknown Inno Setup versions")
+		("stdin", "Read installer file from stdin")
 	;
 	
 	po::options_description filter("Filters");
@@ -349,8 +350,10 @@ int main(int argc, char * argv[]) {
 			o.include = i->second.as<std::vector <std::string> >();
 		}
 	}
-	
-	if(options.count("setup-files") == 0) {
+
+	o.stdin = (options.count("stdin") != 0);
+
+	if(options.count("setup-files") == 0 && !o.stdin) {
 		if(!o.silent) {
 			std::cout << get_command(argv[0]) << ": no input files specified\n";
 			std::cout << "Try the --help (-h) option for usage information.\n";
@@ -433,17 +436,25 @@ int main(int argc, char * argv[]) {
 	}
 	
 	o.extract_unknown = (options.count("no-extract-unknown") == 0);
-	
-	const std::vector<std::string> & files = options["setup-files"]
-	                                         .as< std::vector<std::string> >();
-	
+
+
+	std::vector<std::string> files;
+
+	if(!o.stdin) {
+		files = options["setup-files"].as<std::vector<std::string> >();
+	}
+
 	bool suggest_bug_report = false;
 	try {
-		BOOST_FOREACH(const std::string & file, files) {
-			process_file(file, o);
-			if(!o.data_version && files.size() > 1) {
-				std::cout << '\n';
+		if(!o.stdin){
+			BOOST_FOREACH(const std::string & file, files) {
+				process_file(file, o);
+				if(!o.data_version && files.size() > 1) {
+					std::cout << '\n';
+				}
 			}
+		} else {
+			process_stream(std::cin, ".", o);
 		}
 	} catch(const std::ios_base::failure & e) {
 		log_error << "Stream error while extracting files!\n"

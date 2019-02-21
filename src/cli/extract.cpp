@@ -835,28 +835,34 @@ processed_entries filter_entries(const extract_options & o, const setup::info & 
 } // anonymous namespace
 
 void process_file(const fs::path & file, const extract_options & o) {
-	
+
 	bool is_directory;
 	try {
 		is_directory = fs::is_directory(file);
-	} catch(...) {
+	} catch (...) {
 		throw std::runtime_error("Could not open file \"" + file.string()
-		                         + "\": access denied");
+			                        + "\": access denied");
 	}
-	if(is_directory) {
+	if (is_directory) {
 		throw std::runtime_error("Input file \"" + file.string() + "\" is a directory!");
 	}
-	
+
 	util::ifstream ifs;
 	try {
 		ifs.open(file, std::ios_base::in | std::ios_base::binary);
-		if(!ifs.is_open()) {
+		if (!ifs.is_open()) {
 			throw std::exception();
 		}
-	} catch(...) {
+	} catch (...) {
 		throw std::runtime_error("Could not open file \"" + file.string() + '"');
 	}
-	
+
+	process_stream(ifs, file, o);
+
+}
+
+void process_stream(std::istream & ifs, boost::filesystem::path file, const extract_options & o){
+
 	loader::offsets offsets;
 	offsets.load(ifs);
 	
